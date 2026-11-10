@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <stdexcept>
+#include <numbers>
 
 struct Vec3 {
 	double x;
@@ -81,34 +82,54 @@ Vec3 refract(Vec3 direction, Vec3 normal, double n1, double n2) {
 	return add(multiply(direction, eta), multiply(normal, eta * c - std::sqrt(k)));
 }
 
-double intersectWaterPlane(Ray ray) {
-	double t = -ray.origin.y / ray.direction.y;
+double intersectWaterPlane(Ray ray, double waterHeight) {
+	if (ray.direction.y == 0) return -1;
+	double t = ( waterHeight - ray.origin.y ) / ray.direction.y;
 	if (t > 0) { return t; }
 	return -1;
 }
 
-int main() {
-	/*std::ofstream file("output.ppm");
-	int width = 100;
-	int height = 100;
+double pixelToScreenX(int x, int width) {
+	return 2.0 * (x + 0.5) / width - 1.0;
+}
 
+double pixelToScreenY(int y, int height) {
+	return 1.0 - 2.0 * (y + 0.5) / height;
+}
+
+Vec3 pixelDirection(int x, int y, int width, int height, double fovDegrees) {
+	double ar = double(width) / height;
+	double screenX = pixelToScreenX(x, width) * ar;
+
+	double scale = std::tan(fovDegrees * (std::numbers::pi / 180) / 2);
+
+	return normalize({ screenX * scale, pixelToScreenY(y, height) * scale, -1 });
+}
+
+int main() {
+	std::ofstream file("output.ppm");
+	int width = 800;
+	int height = 600;
+	double FOV = 60;
+	double waterHeight = 0;
 
 	if (file.is_open()) {
 		file << "P3\n" <<width << " " << height<< "\n255\n";
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
-				file << x << " " << y << " 0 ";
+				Ray ray = { { 0,2,0 },pixelDirection(x, y, width, height, FOV) };
+
+				if (intersectWaterPlane(ray, waterHeight) > 0) {
+					file << "20 100 180 ";
+				}
+				else {
+					file << "135 206 245 ";
+				}
 			}
 			file << "\n";
 		}
 	}
 	else {
 		std::cout << "Nie udalo sie otworzyc pliku";
-	}*/
-	Vec3 dir = normalize({ 1,0,0 });
-	Vec3 normal = { 0,1,0 };
-
-	Vec3 res = refract(dir, normal, 1.3333, 1.0);
-
-	std::cout << res.x << ", " << res.y << ", " << res.z;
+	}
 }
