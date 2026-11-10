@@ -81,6 +81,12 @@ Vec3 refract(Vec3 direction, Vec3 normal, double n1, double n2) {
 	return add(multiply(direction, eta), multiply(normal, eta * c - std::sqrt(k)));
 }
 
+double intersectWaterPlane(Ray ray) {
+	double t = -ray.origin.y / ray.direction.y;
+	if (t > 0) { return t; }
+	return -1;
+}
+
 int main() {
 	/*std::ofstream file("output.ppm");
 	int width = 100;
@@ -99,8 +105,8 @@ int main() {
 	else {
 		std::cout << "Nie udalo sie otworzyc pliku";
 	}*/
-	Vec3 dir = normalize({ 2,1,0 });
-	Vec3 normal = { 0,-1,0 };
+	Vec3 dir = normalize({ 1,0,0 });
+	Vec3 normal = { 0,1,0 };
 
 	Vec3 res = refract(dir, normal, 1.3333, 1.0);
 
