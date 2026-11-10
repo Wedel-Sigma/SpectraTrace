@@ -108,23 +108,45 @@ Vec3 pixelDirection(int x, int y, int width, int height, double fovDegrees) {
 
 int main() {
 	std::ofstream file("output.ppm");
-	int width = 800;
-	int height = 600;
+	int width = 1920;
+	int height = 1080;
 	double FOV = 60;
 	double waterHeight = 0;
+	double bottomHeight = -2;
 
 	if (file.is_open()) {
 		file << "P3\n" <<width << " " << height<< "\n255\n";
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				Ray ray = { { 0,2,0 },pixelDirection(x, y, width, height, FOV) };
+				double t = intersectWaterPlane(ray, waterHeight);
+				
+				if (t > 0) {
+					Ray refractedRay = { pointAt(ray, t),refract(ray.direction,{ 0,1,0 },1.0, 1.3333) };
 
-				if (intersectWaterPlane(ray, waterHeight) > 0) {
-					file << "20 100 180 ";
+					double bottomT = intersectWaterPlane(refractedRay, bottomHeight);
+					if (bottomT > 0) {
+						Vec3 bottomPoint = pointAt(refractedRay, bottomT);
+
+						int cellX = int(std::floor(bottomPoint.x));
+						int cellZ = int(std::floor(bottomPoint.z));
+
+						if ((cellX + cellZ) % 2 == 0) {
+							file << "160 230 255 ";
+						}
+						else {
+							file << "0 70 95 ";
+						}
+					}
+					else {
+						file << "0 188 255 ";
+					}
+					
 				}
 				else {
 					file << "135 206 245 ";
 				}
+				
 			}
 			file << "\n";
 		}
