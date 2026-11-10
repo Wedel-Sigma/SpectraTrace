@@ -1,0 +1,59 @@
+
+# ==========================================
+# SpectraTrace - Visual Studio 2026 / C++
+# ==========================================
+
+# Visual Studio - cache and user settings
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+*.VC.VC.opendb
+ipch/
+*.ipch
+
+# Compiled output directories
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+[Oo]ut/
+[Oo]bj/
+
+# MSVC intermediate files
+*.obj
+*.pdb
+*.ipch
+*.idb
+*.ilk
+*.iobj
+*.ipdb
+*.pch
+*.tlog
+*.lastbuildstate
+*.log
+*.tmp
+
+# Compiled binaries
+*.exe
+*.dll
+
+# CMake (future support)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Temporary renderer output
+output/
+
+# Temporary/editor files
+*~
+*.bak
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
