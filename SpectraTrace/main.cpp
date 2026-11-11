@@ -3,6 +3,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <numbers>
+#include <algorithm>
 
 struct Vec3 {
 	double x;
@@ -106,6 +107,32 @@ Vec3 pixelDirection(int x, int y, int width, int height, double fovDegrees) {
 	return normalize({ screenX * scale, pixelToScreenY(y, height) * scale, -1 });
 }
 
+Vec3 pointOnStick(Vec3 start, Vec3 end, double u) {
+	return add(start, multiply(subtract(end, start), u));
+}
+
+double distanceSquared(Vec3 a, Vec3 b) {
+	Vec3 diff = subtract(a, b);
+	return dot(diff, diff);
+}
+
+double stickProjection(Vec3 point, Vec3 start, Vec3 end) {
+	Vec3 diff = subtract(end, start);
+	return dot(subtract(point, start),diff) / dot(diff, diff);
+}
+
+Vec3 closestPointOnStick(Vec3 point, Vec3 start, Vec3 end) {
+	double u = std::clamp(stickProjection(point, start, end), 0.0, 1.0);
+	return pointOnStick(start, end, u);
+}
+
+double distanceSquaredToStick(Vec3 point, Vec3 start, Vec3 end) {
+	return distanceSquared(
+		point,
+		closestPointOnStick(point, start, end)
+	);
+}
+
 int main() {
 	std::ofstream file("output.ppm");
 	int width = 1920;
@@ -113,6 +140,10 @@ int main() {
 	double FOV = 60;
 	double waterHeight = 0;
 	double bottomHeight = -2;
+
+	Vec3 stickStart = { 1,1,-5 };
+	Vec3 stickEnd = { 0,-1,-5 };
+	double stickRadius = 0.1;
 
 	if (file.is_open()) {
 		file << "P3\n" <<width << " " << height<< "\n255\n";
