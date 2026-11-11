@@ -133,35 +133,75 @@ double distanceSquaredToStick(Vec3 point, Vec3 start, Vec3 end) {
 	);
 }
 
+bool pointInsideStick(Vec3 point, Vec3 start, Vec3 end, double radius) {
+	return distanceSquaredToStick(point, start, end) <= radius * radius;
+}
+
+double intersectStick(Ray ray, Vec3 start, Vec3 end, double radius) {
+	for (double t = 0.0; t <= 20.0; t += 0.01) {
+		if (pointInsideStick(pointAt(ray, t), start, end, radius)) {
+			return t;
+		}
+	}
+	return -1;
+}
+
 int main() {
+	// stworzenie pliku
 	std::ofstream file("output.ppm");
+	// ustawienie wymiarów renderu
 	int width = 1920;
 	int height = 1080;
+	// ustawienie FOV kamery w stopniach
 	double FOV = 60;
+	// wysokość tafli wody
 	double waterHeight = 0;
+	// wysokość dna
 	double bottomHeight = -2;
 
+	// dane patyka
 	Vec3 stickStart = { 1,1,-5 };
 	Vec3 stickEnd = { 0,-1,-5 };
 	double stickRadius = 0.1;
 
 	if (file.is_open()) {
+		// dane potrzebne do pliku .ppm
 		file << "P3\n" <<width << " " << height<< "\n255\n";
+		// iteracja po każdym pikselu
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
+				// pierwszy ray z kamery
 				Ray ray = { { 0,2,0 },pixelDirection(x, y, width, height, FOV) };
-				double t = intersectWaterPlane(ray, waterHeight);
-				
-				if (t > 0) {
-					Ray refractedRay = { pointAt(ray, t),refract(ray.direction,{ 0,1,0 },1.0, 1.3333) };
+				// sprawdzenie czy przecina wodę
+				double waterT = intersectWaterPlane(ray, waterHeight);
 
+				// sprawdzenie czy promień uderza w patyk
+				double stickT = intersectStick(ray,stickStart, stickEnd, stickRadius);
+				// promień uderza w patyk oraz (promień nie uderza w wodę lub patyk jest bliżej niż woda)
+				// promień uderza w patyk nad wodą (po ludzku)
+				if (stickT >= 0 && (waterT <= 0 || stickT < waterT)) {
+					file << "139 89 44 ";
+				}// waterT > 0 przecina wodę | waterT <= 0 nie przecina wody
+				else if (waterT > 0) {
+					// drugi promień po zakrzywieniu
+					Ray refractedRay = { pointAt(ray, waterT),refract(ray.direction,{ 0,1,0 },1.0, 1.3333) };
+
+					// sprawdzenie czy uderzy w dno
 					double bottomT = intersectWaterPlane(refractedRay, bottomHeight);
-					if (bottomT > 0) {
+
+					// sprawdzenie czy uderzy w patyk pod wodą
+					double stickInWaterT = intersectStick(refractedRay, stickStart, stickEnd, stickRadius);
+					//promień uderza w patyk pod wodą przed dnem
+					if (stickInWaterT > 0 && (bottomT <= 0 || stickInWaterT < bottomT)) {
+						file << "100 65 35 ";
+					}// bottomT > 0 uderza w dno | bottomT <= 0 nie uderza w dno
+					else if (bottomT > 0) {
+						// obliczanie punktu na dnie dla zrobienia szachownicy co zwiększa widoczność efektu zakrzywienia
 						Vec3 bottomPoint = pointAt(refractedRay, bottomT);
 
 						int cellX = int(std::floor(bottomPoint.x));
 						int cellZ = int(std::floor(bottomPoint.z));
-
+						// jedne kratki jaśniejsze drugie ciemniejsze
 						if ((cellX + cellZ) % 2 == 0) {
 							file << "160 230 255 ";
 						}
@@ -169,19 +209,24 @@ int main() {
 							file << "0 70 95 ";
 						}
 					}
+					// promień nie uderzył w dno (w naszym modelu nie możliwe dla nieskończonego dna i tafli wody)
 					else {
 						file << "0 188 255 ";
 					}
-					
+
 				}
+				// rysowanie nieba gdy promień nie uderza w wodę
 				else {
 					file << "135 206 245 ";
 				}
 				
+				
 			}
+			// przejście do następnej linii w pliku
 			file << "\n";
 		}
 	}
+	// wyjątek gdyby pliku nie udało się otworzyć (mało prawdopodobne)
 	else {
 		std::cout << "Nie udalo sie otworzyc pliku";
 	}

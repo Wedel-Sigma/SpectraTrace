@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="SpectraTrace/SpectraTrace.vcxproj" />
+  <Project Path="SpectraTrace/SpectraTrace.vcxproj" Id="c34eb7e9-bc8d-43ee-808f-98d683ea56d1" />
 </Solution>
